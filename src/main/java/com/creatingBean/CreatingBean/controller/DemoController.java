@@ -14,23 +14,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
 import java.util.StringJoiner;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.util.PropertySource.Comparator;
-import org.apache.tomcat.util.buf.CharChunk;
 import org.json.CDL;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,10 +33,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,7 +47,8 @@ import com.creatingBean.CreatingBean.module.DoubleLinkedList;
 import com.creatingBean.CreatingBean.module.Employee;
 import com.creatingBean.CreatingBean.module.MyLinkedList;
 import com.creatingBean.CreatingBean.module.MyTree;
-import com.creatingBean.CreatingBean.module.TreeNode;
+import com.creatingBean.CreatingBean.repository.A;
+import com.creatingBean.CreatingBean.repository.B;
 import com.creatingBean.CreatingBean.service.DemoService;
 import com.sendgrid.Content;
 import com.sendgrid.Email;
@@ -65,7 +59,7 @@ import com.sendgrid.SendGrid;
 
 @RestController
 @RequestMapping("/hello")
-public class DemoController {
+public class DemoController implements A,B{
 	
 	@Autowired
     Demo demo;
@@ -349,8 +343,8 @@ private void printuprow(int intarr[][], int row, int column) {
 	public Object sortArray() {
 		List<Object> list=new ArrayList<>();
 		
-		int array[]= {0,2,2,3};
-		int zeroCount=0; 
+		int array[]= {1,3,6,3,6,1};
+		//int zeroCount=0; 
 		
 		for (int i = 0; i < array.length; i++) {
 			
@@ -362,15 +356,12 @@ private void printuprow(int intarr[][], int row, int column) {
 				} else {
 					array[index] = -array[index];
 				}
-			}else {
-				zeroCount+=1;
-			}
-			if(zeroCount > 1) {
-				list.add(0); 
-			}
+			} /*
+				 * else { zeroCount+=1; } if(zeroCount > 1) { list.add(0); }
+				 */
 		}
 		
-		return list;
+		return list +" : "+Arrays.toString(array);
 	}
 	
 	@PostMapping("excelFile")
@@ -1123,5 +1114,121 @@ private void printuprow(int intarr[][], int row, int column) {
 	public String getDemo() {
 		return service.getdemo("ABC","ABD");
 	}
+	
+	@GetMapping("bitsArray/{array}")
+	public Object bitArray(@PathVariable String array) {
+		
+		int n[]= {1,1,3};	
+		/*
+		 * for (int i = 0; i < array.length(); i++) {
+		 * n[i]=Integer.valueOf(array.charAt(i)); }
+		 */
+		
+		int ones = 0, twos = 0; 
+        int common_bit_mask; 
+          
+        for(int i=0; i<n.length; i++ ) 
+        { 
+            twos = twos | (ones & n[i]); 
+  
+            ones = ones ^ n[i]; 
+  
+            common_bit_mask = ~(ones & twos); 
+                          
+            /*Remove common bits (the bits that appear third time) from 'ones'*/
+            ones &= common_bit_mask; 
+                          
+            /*Remove common bits (the bits that appear third time) from 'twos'*/
+            twos &= common_bit_mask; 
+	}
+	return ones;
+	}
+	
+	@GetMapping("{string}/{substring}")
+	public Object occurenceCount(@PathVariable String string, @PathVariable String substring) {
+		return string.replace(substring, "").length()+1;
+	//	return countOccurrences(string, substring);
+	}
+	public int countOccurrences(String haystack, String needle) {
+		return (haystack.length() - haystack.replace(needle, "").length()) / needle.length();
+	}
+	
+	public Object nextSmallestPalindrome(String value) {
+		int mid=value.length()/2;
+		StringBuffer subValue=new StringBuffer(value.substring(0, mid)).reverse();
+		
+		for (int i = 0; i < mid; i++) {
+			
+		}
+		return null;
+	}
+	
+	@GetMapping("convert/{decimal}")
+	public Object decimalToBinary(@PathVariable Integer decimal) {
+		
+		String ress="";
+		while(decimal > 0) {
+			ress+=decimal%2+"";
+			
+			decimal=decimal/2;
+		}
+		
+		StringBuffer sb=new StringBuffer(ress);
+		return sb.reverse().toString();
+	}
+	
+	@GetMapping("reverseNumber/{digit}")
+	public Object reverseNumber(@PathVariable Integer digit) {
+		Integer result=0;
+		while(digit > 0) {
+			result=result*10+digit%10;	
+			digit=digit/10;
+		}
+		return result;
+	}
+	
+	@GetMapping("quickSearch")
+	public Object heapSearch() {
+		
+		int array[]= {12,1,3,9,4,23,90,33,56,6,2};
+		sort(array, 0, array.length-1);
+		
+		return Arrays.toString(array);
+	}
+	
+	int partition(int arr[], int low, int high) 
+    { 
+        int pivot = arr[high];  
+        int i = (low-1); 
+        for (int j=low; j<high; j++) 
+        { 
+            if (arr[j] < pivot) 
+            { 
+                i++; 
+  
+                int temp = arr[i]; 
+                arr[i] = arr[j]; 
+                arr[j] = temp; 
+            } 
+        } 
+  
+        int temp = arr[i+1]; 
+        arr[i+1] = arr[high]; 
+        arr[high] = temp; 
+  
+        return i+1; 
+    } 
+  
+  
+    void sort(int arr[], int low, int high) 
+    { 
+        if (low < high) 
+        { 
+            int midIndex = partition(arr, low, high); 
+  
+            sort(arr, low, midIndex-1); 
+            sort(arr, midIndex+1, high); 
+        } 
+    } 
 	
 }
