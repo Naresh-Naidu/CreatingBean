@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.StringJoiner;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -88,10 +90,22 @@ public class DemoController implements A,B{
 		listEmp.add(new Employee(3,"ramesh@gamil.com","Ramesh", "Admin", 100d));
 		listEmp.add(new Employee(3,"Suresh@gamil.com","Naresh","Admin", 100d));
 		
+		Map<String, Integer> strMap=new HashMap<>();
+		Arrays.asList("Iam going to work as SSE in big MNC company".split("")).stream().forEach(s-> {
+			if("AEIOU".contains(s.toUpperCase()))
+				strMap.put(s.toUpperCase(), strMap.getOrDefault(s, 0)+1);
+		});
+		
+		Character c='A';
+		System.out.println(++c);
+		
+		System.out.println("=============Stream filer valur===============");
+		System.out.println(strMap);
 		
 		java.util.Comparator<Employee> empByname=(e1,e2)-> e2.getFirstName().compareTo(e1.getFirstName());
 		java.util.Comparator<Employee> empByBoth=java.util.Comparator.comparing(Employee::getFirstName).reversed().thenComparing(Employee::getId);
 		listEmp.stream().sorted(empByBoth).collect(Collectors.toList());
+
 		
 		Map<Integer, Employee> empMap = listEmp.stream().collect(Collectors.toMap(Employee :: getId, employee -> employee
                 , (oldValue, newValue) -> oldValue,LinkedHashMap::new));
@@ -1144,15 +1158,6 @@ private void printuprow(int intarr[][], int row, int column) {
 	return ones;
 	}
 	
-	@GetMapping("{string}/{substring}")
-	public Object occurenceCount(@PathVariable String string, @PathVariable String substring) {
-		return string.replace(substring, "").length()+1;
-	//	return countOccurrences(string, substring);
-	}
-	public int countOccurrences(String haystack, String needle) {
-		return (haystack.length() - haystack.replace(needle, "").length()) / needle.length();
-	}
-	
 	public Object nextSmallestPalindrome(String value) {
 		int mid=value.length()/2;
 		StringBuffer subValue=new StringBuffer(value.substring(0, mid)).reverse();
@@ -1229,6 +1234,242 @@ private void printuprow(int intarr[][], int row, int column) {
             sort(arr, low, midIndex-1); 
             sort(arr, midIndex+1, high); 
         } 
-    } 
+    }
+    
+    @GetMapping("{original}/{substring}")
+    public Object getLCS(@PathVariable String original, @PathVariable String substring) {
+    	
+    	return printLCSubStr(original, substring, original.length(), substring.length());
+    }
+    
+	public String printLCSubStr(String X, String Y, int m, int n) {
+		int[][] LCSuff = new int[m + 1][n + 1];
+
+		int len = 0;
+		int row = 0, col = 0;
+
+		for (int i = 0; i <= m; i++) {
+			for (int j = 0; j <= n; j++) {
+				if (i == 0 || j == 0)
+					LCSuff[i][j] = 0;
+
+				else if (X.charAt(i - 1) == Y.charAt(j - 1)) {
+					LCSuff[i][j] = LCSuff[i - 1][j - 1] + 1;
+					if (len < LCSuff[i][j]) {
+						len = LCSuff[i][j];
+						row = i;
+						col = j;
+					}
+				} else
+					LCSuff[i][j] = 0;
+			}
+		}
+
+		if (len == 0) {
+			return "No Common Substring";
+		}
+
+		String resultStr = "";
+		while (LCSuff[row][col] != 0) {
+			resultStr = X.charAt(row - 1) + resultStr; // or Y[col-1]
+			row--;
+			col--;
+		}
+		return resultStr;
+	}
 	
+	@GetMapping("heapsort")
+	public Object heapSort() {
+		
+		int array[]= {30,50,15,20,10};
+		for (int i = 0; i < array.length; i++) {
+			heapify(array,array.length/2, i);
+		}
+		for (int i=array.length-1; i>0; i--) 
+        { 
+            int temp = array[0]; 
+            array[0] = array[i]; 
+            array[i] = temp; 
+  
+            heapify(array, i, 0); 
+        } 
+		return Arrays.toString(array);
+	}
+
+	private void heapify(int[] array, int length, int i) {
+
+		int rootIndex = i;
+		int leftIndex = 2 * i;
+		int rightIndex = 2 * i + 1;
+
+		if (leftIndex < length && array[leftIndex] > array[rootIndex])
+			rootIndex = leftIndex;
+
+		if (rightIndex < length && array[rightIndex] > array[rootIndex])
+			rootIndex = rightIndex;
+
+		if (rootIndex != i) {
+			int swap = array[i];
+			array[i] = array[rootIndex];
+			array[rootIndex] = swap;
+
+			heapify(array, length, rootIndex);
+		}
+	}
+	
+	@GetMapping("numberIsland")
+	public Object numberOfIsland() {
+		int grid[][]= { { 1, 1, 0, 0, 0 }, 
+		                { 0, 1, 0, 0, 1 }, 
+		                { 1, 0, 0, 1, 1 }, 
+		                { 0, 0, 0, 0, 0 }, 
+		                { 1, 0, 1, 0, 1 } };
+		
+		int numberIslands=0;
+		
+		for (int i = 0; i < grid.length; i++) {
+			for (int j = 0; j < grid[i].length; j++) {
+				
+				if(grid[i][j]==1)
+					numberIslands+=dfs(grid, i, j);
+					
+			}
+		}
+		
+		return numberIslands;
+	}
+
+	private int dfs(int[][] grid, int i, int j) {
+		if(i<0 || i>=grid.length  || j<0 || j>=grid[i].length || grid[i][j]==0)
+			return 0;
+		
+		grid[i][j]=0;
+		dfs(grid, i+1,j);
+		dfs(grid, i-1,j);
+		dfs(grid, i,j+1);
+		dfs(grid, i,j-1);
+		return 1;
+		
+	}
+	
+	@GetMapping("stringcomb/{string}")
+	public Object stringCombination(@PathVariable String string) {
+		Set<String> result=new TreeSet<>();
+		combinationPermutation(string, "", result);
+		return result;
+	}
+
+	private void combinationPermutation(String original, String output, Set<String> result) {
+		System.out.println(original);
+		if(original.length()==0) {
+			result.add(output);
+		}
+		if(original.length()>0) {
+		
+		combinationPermutation(original.substring(1), output, result);
+		
+		combinationPermutation(original.substring(1), output + original.charAt(0), result);
+		}
+	}
+	
+	@GetMapping("arraycomb")
+	public Object arrayCombination() {
+		
+		int array[] = {1, 2, 3, 4, 5};
+		int data[] = new int[3];
+		arrayCombination(array, array.length, 3, 0, data , 0);
+		return data;
+	}
+
+	private void arrayCombination(int[] array, int length, int testcases, int index, int[] data, int currentIndex) {
+
+		if (index == testcases) 
+        { 
+            for (int j=0; j<testcases; j++) 
+                System.out.print(data[j]+" "); 
+            System.out.println(""); 
+        return; 
+        } 
+  
+        if (currentIndex >= length) 
+        return; 
+  
+        data[index] = array[currentIndex]; 
+        arrayCombination(array, length, testcases, index+1, data, currentIndex+1); 
+  
+        arrayCombination(array, length, testcases, index, data, currentIndex+1);
+	} 
+	
+  
+	@GetMapping("distance/{one}/{two}")
+	public Object distanceString(@PathVariable String one, @PathVariable String two) {
+		
+		char ch1[]=one.toLowerCase().toCharArray();
+		char ch2[]=two.toLowerCase().toCharArray();
+		String twoChar=String.valueOf(ch2);
+		
+		char ch3[]=new char[ch2.length];
+		int index=0;
+			for (int i = 0; i < ch2.length; i++) {
+				for (int j = 0; j < ch1.length; j++) {
+					if(ch2[i]==ch1[j] && ch1[j]!=0 && ch2[i]!=0) {
+						ch3[index++]=ch2[i];
+						ch2[i]=0;
+						ch1[j]=0;
+					}
+				}
+			}
+		StringBuffer sb=new StringBuffer();
+		for (int i = 0; i < ch3.length; i++) {
+			if(ch3[i]!=0)
+				sb.append(ch3[i]);
+		}
+		
+		return twoChar.length()-sb.toString().length();
+	}
+	
+	@GetMapping("arrayallCombination")
+	public Object arraycombination() {
+		
+		int array[] = {1, 2, 3};
+		List<List<Integer>> result=new ArrayList<>();
+		
+		arrayAllCombination(array, 0, new ArrayList<>(), result);
+		return result;
+	}
+
+	private void arrayAllCombination(int[] array, int index, ArrayList<Integer> currentList, List<List<Integer>> result) {
+		result.add(new ArrayList<>(currentList));
+		for (int j = index; j < array.length; j++) {
+			currentList.add(array[j]);
+			arrayAllCombination(array, j+1, currentList, result);
+			currentList.remove(currentList.size()-1);
+		}
+	}
+	
+	@GetMapping("hashmapTest")
+	public Object hasmhmapTest() {
+		Map<Employee,String> map=new HashMap<>();
+		map.put(new Employee(1, "naresh", "naidu", "IT", 20000.0), "naresh");
+		map.put(new Employee(2, "suresh", "reddy", "IT", 30000.0), "suresh");
+		map.put(new Employee(3, "rakesh", "kumar", "IT", 40000.0), "rakesh");
+		map.put(new Employee(1, "naresh", "naidu", "IT", 20000.0), "naresh");
+		
+		System.out.println(map.size());
+		System.out.println(map.get(new Employee(3, "rakesh", "kumar", "IT", 40000.0)));
+		
+		List<String> li=new ArrayList<>();
+		li.add("1");
+		li.add("2");
+		
+	Map<String,Integer>	mapcount=Arrays.asList("This is the naresh naidu").parallelStream().flatMap(a-> Arrays.asList(a.split(" ")).stream()).collect(Collectors.toConcurrentMap(c -> {
+		if(!c.toString().toLowerCase().isEmpty()) 
+			return c;	
+		return c;
+	}, c->1, Integer::sum));
+		System.out.println(mapcount);
+		return map;
+	}
+	
+		
 }
