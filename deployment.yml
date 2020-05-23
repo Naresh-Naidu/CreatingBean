@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-engine
+  namespace: smart-alerts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-engine
+  template:
+    metadata:
+      labels:
+        app: notification-engine
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: notification-engine-container
+        image: devinnovationsaksgpucommonacr.azurecr.io/smart-alerts/notification-engine-dev:4
+        ports:
+        - containerPort: 3000
+          name: n-e-port
+        env:
+          - name: SENDER_EMAIL
+             value: "SamsAlerts@email.wal-mart.com"
+           - name: EMAIL_HOST
+              value: "vsitemta.walmart.com"
+          - name: COSMOS_URL
+              value: "https://dev-sams-smart-alerts-sql.documents.azure.com:443/"
+          - name: COSMOS_KEY
+              value: "j0vtAyi43Sbds4i7kdWU2hviYAHQ7eoM38G3ZfvClLcQ6Wu6TugU0EzV0CQhwq93G6w4qjYMAsmaOEOWLdZYmQ=="
+          - name: COSMOS_DB_NAME
+              value: "alert"
+          - name: BLOB_CONTAINER_NAME
+              value: "email-templates"
+          - name:  BLOB_CONN_STRING
+              value: "DefaultEndpointsProtocol=https;AccountName=devsamssmartalerts;AccountKey=zS4ovoWU+Q4ISjK9Su/D2pOsfbjyt6TmPZ8js+5NlHFb9oRbthw93OA6hb/U9VfWi8+Xov9s1ya65FXzudUkwA==;EndpointSuffix=core.windows.net"
+          - name: SERVER_PORT
+            value: "3000"
+          - name: APP_INSIGHTS_KEY
+            value: "39379542-5845-427e-9513-071bcea094c5"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-engine
+  namespace: smart-alerts
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app: notification-engine
+
